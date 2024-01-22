@@ -1,8 +1,38 @@
+//import necessary modules for application
 import express from "express";
 import bodyParser from "body-parser";
+import pg from "pg";
 
+//create server
 const app = express();
 const port = 3000;
+
+//setup database connection
+const db = new pg.Client({
+  user: "postgres",
+  host: "localhost",
+  database: "world",
+  password: "faithfirst",
+  port: 5432,
+});
+
+//connect to a database
+db.connect();
+
+//sample data
+let quiz = [
+  { name: "United States of America", flag: "🇺🇸"}
+]
+
+//pull the data you want from the database
+db.query("SELECT * FROM flags", (err, res) => {
+  if (err) {
+    console.error("Error executing query", err.stack);
+  } else {
+    quiz = res.rows;
+  }
+  db.end();
+});
 
 let totalCorrect = 0;
 
@@ -13,9 +43,9 @@ app.use(express.static("public"));
 let currentQuestion = {};
 
 // GET home page
-app.get("/", (req, res) => {
+app.get("/", async (req, res) => {
   totalCorrect = 0;
-  nextQuestion();
+  await nextQuestion();
   console.log(currentQuestion);
   res.render("index.ejs", { question: currentQuestion });
 });
